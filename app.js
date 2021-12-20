@@ -40,20 +40,26 @@ io.on("connection", (socket) => {
     });
 
     socket.emit("currentUserData", { name: newUser.name });
-
-    socket.on("initGameState", (gameState) => {
-      const user = getUser(socket.id);
-      console.log(user);
-      if (user) io.to(user.room).emit("initGameState", gameState);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('user Disconnected!', socket.id);
-      const user = removeUser(socket.id)
-      if(user)
-        io.to(user.room).emit('roomData', {room: user.room, users: getUsersInRoom(user.room)})
-    })
   });
+
+  socket.on("initGameState", (gameState) => {
+    const user = getUser(socket.id);
+    console.log(user);
+    if (user) io.to(user.room).emit("initGameState", gameState);
+  });
+
+  socket.on('updateGameState', (gameState) => {
+    const user = getUser(socket.id);
+    if(user)
+      io.to(user.room).emit('updateGameState', gameState);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('user Disconnected!', socket.id);
+    const user = removeUser(socket.id)
+    if(user)
+      io.to(user.room).emit('roomData', {room: user.room, users: getUsersInRoom(user.room)})
+  })
 });
 
 server.listen(8080, () => {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 //import { useSelector } from "react-redux";
 const CardContainer = styled.div`
@@ -10,7 +10,7 @@ const CardContainer = styled.div`
   }
 `;
 
-const Card = ({ cardImg, cardValue }) => {
+const Card = ({ cardImg, id, selectCard, canFlip, initiateFlip }) => {
   const [isFliped, setIsFliped] = useState(false);
   // const state = useSelector((state) => state);
   // console.log(state);
@@ -21,13 +21,25 @@ const Card = ({ cardImg, cardValue }) => {
     setIsFliped(!isFliped);
   };
 
+  const handleClick = () => {
+    if (!canFlip || isFliped) return;
+    handleFlip();
+    selectCard(id);
+  }
+
+  useEffect(() => {
+    if (initiateFlip) {
+      setIsFliped(false);
+    }
+  }, [initiateFlip])
+
   let card = isFliped ? (
     <img alt="" src={cardImg} className="imgContainer" />
   ) : (
     <img alt="" src={cardBack} className="imgContainer" />
   );
 
-  return <CardContainer onClick={handleFlip}>{card}</CardContainer>;
+  return <CardContainer onClick={handleClick}>{card}</CardContainer>;
 };
 
 export default Card;
