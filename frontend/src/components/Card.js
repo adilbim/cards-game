@@ -10,28 +10,29 @@ const CardContainer = styled.div`
   }
 `;
 
-const Card = ({ cardImg, id, selectCard, canFlip, initiateFlip }) => {
-  const [isFliped, setIsFliped] = useState(false);
+const Card = ({ cardImg, id, selectCard, canFlip, disabled, isFliped }) => {
+  //const [isFliped, setIsFliped] = useState(false);
   // const state = useSelector((state) => state);
   // console.log(state);
   const cardBack =
     "https://media.istockphoto.com/photos/bicycle-rider-back-playing-card-design-picture-id157772536?k=20&m=157772536&s=170667a&w=0&h=46bM0a2wuwcddiOzNOHTfS9PcUzjXwNTTCy33SrkC_0=";
 
-  const handleFlip = () => {
-    setIsFliped(!isFliped);
-  };
+  // const handleFlip = () => {
+  //   setIsFliped(!isFliped);
+  // };
 
   const handleClick = () => {
+    if (disabled) return;
     if (!canFlip || isFliped) return;
-    handleFlip();
+    // handleFlip();
     selectCard(id);
   }
 
-  useEffect(() => {
-    if (initiateFlip) {
-      setIsFliped(false);
-    }
-  }, [initiateFlip])
+  // useEffect(() => {
+  //   if (initiateFlip) {
+  //     setIsFliped(false);
+  //   }
+  // }, [initiateFlip])
 
   let card = isFliped ? (
     <img alt="" src={cardImg} className="imgContainer" />

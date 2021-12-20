@@ -74,8 +74,9 @@ const Game = ({ room }) => {
   const [player2points, setPlayer2points] = useState(0);
   const [gameOver, setGameOver] = useState(false);
 
-  const [canFlipCard, setCanFlipCard] = useState(true);
+  const [canFlipCard, setCanFlipCard] = useState(false);
   const [initiateFlip, setInitiateFlip] = useState(false);
+  const [selectedShowCards, setSelectedShowCards] = useState([]);
 
   const selectCard = (cardId) => {
     if (selectedCards.length >= 2) {
@@ -83,22 +84,23 @@ const Game = ({ room }) => {
       return;
     } else {
       setSelectedCards([...selectedCards, cardId]);
+      setSelectedShowCards([...selectedCards, cardId]);
     }
   };
 
   const shuffleCards = () => {
     setPlayer1Deck(_.shuffle(cards));
     setPlayer2Deck(_.shuffle(cards));
-    setInitiateFlip(true);
+    //setInitiateFlip(true);
     //setInitiateFlip(false);
   }
 
   const player1Cards = player1Deck.map((card, i) => {
-    return <Card initiateFlip={initiateFlip} canFlip={canFlipCard} selectCard={selectCard} key={i} cardImg={card.img} id={card.id} />;
+    return <Card disabled={turn !== currentUser?.name} canFlip={canFlipCard} selectCard={selectCard} isFliped={selectedShowCards[1] === card.id} key={i} cardImg={card.img} id={card.id} />;
   });
 
   const player2Cards = player2Deck.map((card, i) => {
-    return <Card initiateFlip={initiateFlip} canFlip={!canFlipCard} selectCard={selectCard} key={i} cardImg={card.img} id={card.id} />;
+    return <Card disabled={turn !== currentUser?.name} canFlip={!canFlipCard} selectCard={selectCard} isFliped={selectedShowCards[0] === card.id} key={i} cardImg={card.img} id={card.id} />;
   });
 
   useEffect(() => {
@@ -146,17 +148,20 @@ const Game = ({ room }) => {
     });
 
     socket.on("roomData", function (data) {
-      console.log("roomData", data);
+      //console.log("roomData", data);
       setUsers(data.users);
     });
     socket.on("currentUserData", function (data) {
-      console.log("currentUserData", data);
+      //console.log("currentUserData", data);
       setCurrentUser(data);
+      setCanFlipCard(turn === data.name);
     });
   }, [room]);
 
   useEffect(() => {
-    socket.on('updateGameState', ({ turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points }) => {
+    socket.on('updateGameState', ({ turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points, selectedShowCards }) => {
+      //console.log('updateGameState', turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points);
+      console.log('updateGameState');
       turn && setTurn(turn);
       gameOver && setGameOver(gameOver);
       player1Deck && setPlayer1Deck(player1Deck);
@@ -164,47 +169,55 @@ const Game = ({ room }) => {
       selectedCards && setSelectedCards(selectedCards);
       player1points && setPlayer1points(player1points);
       player2points && setPlayer1points(player2points);
+      selectedShowCards && setSelectedShowCards(selectedShowCards);
     });
-  }, []);
+  }, [room]);
 
   useEffect(() => {
     const currentPlayer = currentUser?.name;
-    if (currentPlayer === turn && selectedCards.length <= 1) {
-      setCanFlipCard(!canFlipCard);console.log('bosa', turn);
+    if (selectedCards.length === 0) {
+      return
+    } else if (selectedCards.length === 1) {
+      setCanFlipCard(!canFlipCard);console.log('selcted card1', turn);
       //socket.emit('updateGameState',{});
-    } else if (currentPlayer === turn && selectedCards.length === 2) {
+    } else if (selectedCards.length === 2) {
       //point logic calulations
-      if (selectedCards[0] === selectedCards[1]) {
+      if (selectedCards[0] === selectedCards[1]) {console.log('match!');
         if (turn === 'Player 1') {
-          setPlayer1points(player1points + 2);
-          setTurn('Player 2');
-          setSelectedCards([]);
-          shuffleCards();
-          socket.emit('updateGameState', {turn, selectedCards, player1Deck, player2Deck, player1points, player2points});
+          //setPlayer1points(player1points + 2);
+          //setTurn('Player 2');
+          //setSelectedCards([]);
+          //shuffleCards();
+          socket.emit('updateGameState', {selectedCards: [], player1Deck, player2Deck, player1points: player1points + 2});
         } else {
-          setPlayer2points(player2points + 2);
-          setTurn('Player 1');
-          setSelectedCards([]);
-          shuffleCards();
-          socket.emit('updateGameState', {turn, selectedCards, player1Deck, player2Deck, player1points, player2points});
+          //setPlayer2points(player2points + 2);
+          //setTurn('Player 1');
+          //setSelectedCards([]);
+          //shuffleCards();
+          socket.emit('updateGameState', {selectedCards: [], player1Deck, player2Deck, player2points: player2points + 2});
         }
       } else {
         const newPlayerTurn = turn === 'Player 1' ? 'Player 2' : 'Player 1';
-        console.log('new Player turn', newPlayerTurn);
-        setTurn(newPlayerTurn);
-        setSelectedCards([]);
-        shuffleCards();
-        socket.emit('updateGameState', {turn: newPlayerTurn, selectedCards, player1Deck, player2Deck });
+        console.log('not match new Player turn is', newPlayerTurn);
+        //setTurn(newPlayerTurn);
+        //setSelectedCards([]);
+        //shuffleCards();
+        socket.emit('updateGameState', {turn: newPlayerTurn, selectedCards: [], player1Deck, player2Deck });
       }
       
       //a delay to make stuff not quick
-      setCanFlipCard(!canFlipCard);
-      shuffleCards();
+      // setCanFlipCard(!canFlipCard);
+      // shuffleCards();
       //emit the stuff
-      socket.emit('updateGameState', {player1Deck, player2Deck});
+      //socket.emit('updateGameState', {player1Deck, player2Deck});
     }
 
-  }, [selectedCards, turn])
+  }, [selectedCards])
+
+  useEffect(() => {
+    if (selectedCards.length === 0) return;
+    socket.emit('updateGameState', { selectedShowCards });
+  }, [selectedCards]);
 
   useEffect(() => {
     if (users.length === 2) {
@@ -220,6 +233,7 @@ const Game = ({ room }) => {
 
   return (
     <Container>
+      <h1>{currentUser?.name}</h1>
       <CardSectionContainer>{player1Cards}</CardSectionContainer>
       <CardSectionContainer>{player2Cards}</CardSectionContainer>
     </Container>

@@ -30,7 +30,7 @@ io.on("connection", (socket) => {
       room: payload.room
     });
     console.log("newUser", newUser);
-    console.log("users", getUsersInRoom(newUser.room));
+    //console.log("users", getUsersInRoom(newUser.room));
 
     socket.join(newUser.room);
 
@@ -44,12 +44,13 @@ io.on("connection", (socket) => {
 
   socket.on("initGameState", (gameState) => {
     const user = getUser(socket.id);
-    console.log(user);
+    // console.log(user);
     if (user) io.to(user.room).emit("initGameState", gameState);
   });
 
   socket.on('updateGameState', (gameState) => {
     const user = getUser(socket.id);
+    //console.log('updateGameState', gameState, user);
     if(user)
       io.to(user.room).emit('updateGameState', gameState);
   });
