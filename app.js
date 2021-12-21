@@ -21,7 +21,7 @@ io.on("connection", (socket) => {
 });
 
 io.on("connection", (socket) => {
-  socket.on("join", (payload) => {
+  socket.on("join", (payload, callback) => {
     let numberOfUsersInRoom = getUsersInRoom(payload.room).length;
 
     const { error, newUser } = addUser({
@@ -31,6 +31,8 @@ io.on("connection", (socket) => {
     });
     console.log("newUser", newUser);
     //console.log("users", getUsersInRoom(newUser.room));
+
+    if(error) return callback(error);
 
     socket.join(newUser.room);
 

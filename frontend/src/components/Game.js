@@ -131,6 +131,10 @@ const Game = ({ room }) => {
   }, [room]);
 
   useEffect(() => {
+    if (roomFull) alert('The room is Full');
+  }, [roomFull]);
+
+  useEffect(() => {
     return function cleanup() {
         socket.emit("disconnect");
         //shut down connnection instance
