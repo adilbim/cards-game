@@ -75,7 +75,7 @@ const Game = ({ room }) => {
   const [gameOver, setGameOver] = useState(false);
 
   const [canFlipCard, setCanFlipCard] = useState(false);
-  const [initiateFlip, setInitiateFlip] = useState(false);
+  //const [initiateFlip, setInitiateFlip] = useState(false);
   const [selectedShowCards, setSelectedShowCards] = useState([]);
 
   const selectCard = (cardId) => {
@@ -96,11 +96,11 @@ const Game = ({ room }) => {
   }
 
   const player1Cards = player1Deck.map((card, i) => {
-    return <Card disabled={turn !== currentUser?.name} canFlip={canFlipCard} selectCard={selectCard} isFliped={selectedShowCards[1] === card.id} key={i} cardImg={card.img} id={card.id} />;
+    return <Card disabled={turn !== currentUser?.name} canFlip={canFlipCard} selectCard={selectCard} isFliped={selectedShowCards[0] === card.id} key={i} cardImg={card.img} id={card.id} />;
   });
 
   const player2Cards = player2Deck.map((card, i) => {
-    return <Card disabled={turn !== currentUser?.name} canFlip={!canFlipCard} selectCard={selectCard} isFliped={selectedShowCards[0] === card.id} key={i} cardImg={card.img} id={card.id} />;
+    return <Card disabled={turn !== currentUser?.name} canFlip={!canFlipCard} selectCard={selectCard} isFliped={selectedShowCards[1] === card.id} key={i} cardImg={card.img} id={card.id} />;
   });
 
   useEffect(() => {
@@ -156,9 +156,9 @@ const Game = ({ room }) => {
       setUsers(data.users);
     });
     socket.on("currentUserData", function (data) {
-      //console.log("currentUserData", data);
+      console.log("currentUserData", data, turn === data.name);
       setCurrentUser(data);
-      setCanFlipCard(turn === data.name);
+      setCanFlipCard('Player 1' === data.name);
     });
   }, [room]);
 
@@ -177,8 +177,9 @@ const Game = ({ room }) => {
     });
   }, [room]);
 
-  useEffect(() => {
-    const currentPlayer = currentUser?.name;
+  useEffect(async () => {
+    const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+    //const currentPlayer = currentUser?.name;
     if (selectedCards.length === 0) {
       return
     } else if (selectedCards.length === 1) {
@@ -188,25 +189,31 @@ const Game = ({ room }) => {
       //point logic calulations
       if (selectedCards[0] === selectedCards[1]) {console.log('match!');
         if (turn === 'Player 1') {
+          setCanFlipCard(!canFlipCard);
           //setPlayer1points(player1points + 2);
           //setTurn('Player 2');
           //setSelectedCards([]);
           //shuffleCards();
-          socket.emit('updateGameState', {selectedCards: [], player1Deck, player2Deck, player1points: player1points + 2});
+          await delay(1000);
+          socket.emit('updateGameState', {selectedCards: [], player1Deck, player2Deck, selectedShowCards: [], player1points: player1points + 2});
         } else {
+          setCanFlipCard(!canFlipCard);
           //setPlayer2points(player2points + 2);
           //setTurn('Player 1');
           //setSelectedCards([]);
           //shuffleCards();
-          socket.emit('updateGameState', {selectedCards: [], player1Deck, player2Deck, player2points: player2points + 2});
+          await delay(1000);
+          socket.emit('updateGameState', {selectedCards: [], player1Deck, player2Deck, selectedShowCards: [], player2points: player2points + 2});
         }
       } else {
         const newPlayerTurn = turn === 'Player 1' ? 'Player 2' : 'Player 1';
         console.log('not match new Player turn is', newPlayerTurn);
+        //setCanFlipCard(!canFlipCard);
         //setTurn(newPlayerTurn);
         //setSelectedCards([]);
         //shuffleCards();
-        socket.emit('updateGameState', {turn: newPlayerTurn, selectedCards: [], player1Deck, player2Deck });
+        await delay(1000);
+        socket.emit('updateGameState', {turn: newPlayerTurn, selectedCards: [], selectedShowCards: [], player1Deck, player2Deck });
       }
       
       //a delay to make stuff not quick
@@ -235,11 +242,19 @@ const Game = ({ room }) => {
     }
   }, [gameStarted]);
 
+  useEffect(() => {
+    if (turn) {
+      setCanFlipCard(turn === currentUser?.name);
+    }
+  }, [turn, currentUser]);
+
   return (
     <Container>
       <h1>{currentUser?.name}</h1>
-      <CardSectionContainer>{player1Cards}</CardSectionContainer>
+      <h2>{room && currentUser?.name === turn ? 'Its your turn' : ''}</h2>
+      <h2>{canFlipCard ? 'Down Deck': 'Up Deck'}</h2>
       <CardSectionContainer>{player2Cards}</CardSectionContainer>
+      <CardSectionContainer>{player1Cards}</CardSectionContainer>
     </Container>
   );
 };
