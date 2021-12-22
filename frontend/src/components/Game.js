@@ -75,8 +75,11 @@ const Game = ({ room }) => {
   const [gameOver, setGameOver] = useState(false);
 
   const [canFlipCard, setCanFlipCard] = useState(false);
-  //const [initiateFlip, setInitiateFlip] = useState(false);
+  const [seconds, setSeconds] = useState(59);
   const [selectedShowCards, setSelectedShowCards] = useState([]);
+  const [player1Timer, setPlayer1Timer] = useState(29);
+  const [player2Timer, setPlayer2Timer] = useState(29);
+  const [turnTimer, setTurnTimer] = useState(5);
 
   const selectCard = (cardId) => {
     if (selectedCards.length >= 2) {
@@ -163,7 +166,7 @@ const Game = ({ room }) => {
   }, [room]);
 
   useEffect(() => {
-    socket.on('updateGameState', ({ turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points, selectedShowCards }) => {
+    socket.on('updateGameState', ({ turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points, selectedShowCards, player1Timer, player2Timer, turnTimer, seconds }) => {
       //console.log('updateGameState', turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points);
       console.log('updateGameState');
       turn && setTurn(turn);
@@ -174,6 +177,10 @@ const Game = ({ room }) => {
       player1points && setPlayer1points(player1points);
       player2points && setPlayer1points(player2points);
       selectedShowCards && setSelectedShowCards(selectedShowCards);
+      player1Timer && setPlayer1Timer(player1Timer);
+      player2Timer && setPlayer2Timer(player2Timer);
+      turnTimer && setTurnTimer(turnTimer);
+      seconds && setSeconds(seconds);
     });
   }, [room]);
 
@@ -208,10 +215,14 @@ const Game = ({ room }) => {
       } else {
         const newPlayerTurn = turn === 'Player 1' ? 'Player 2' : 'Player 1';
         console.log('not match new Player turn is', newPlayerTurn);
-        //setCanFlipCard(!canFlipCard);
-        //setTurn(newPlayerTurn);
-        //setSelectedCards([]);
-        //shuffleCards();
+        if (turn === 'Player 1') {
+          //setPlayer2Timer(5 - turnTimer);
+          socket.emit('updateGameState', { player2Timer: player2Timer + 5 - turnTimer });
+        }
+        if (turn === 'Player 2') {
+          //setPlayer1Timer(5 - turnTimer);
+          socket.emit('updateGameState', { player1Timer: player1Timer + 5 - turnTimer });
+        }
         await delay(1000);
         socket.emit('updateGameState', {turn: newPlayerTurn, selectedCards: [], selectedShowCards: [], player1Deck, player2Deck });
       }
@@ -224,6 +235,69 @@ const Game = ({ room }) => {
     }
 
   }, [selectedCards])
+
+  useEffect(() => {
+    //const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+    // await delay(3000);
+    if (gameStarted) {
+      const myInterval = setInterval(() => {
+        if (seconds > 0) {
+          //setSeconds(seconds - 1);
+          socket.emit('updateGameState', { seconds: seconds - 1 });
+        }
+        if (seconds === 0) {
+          clearInterval(myInterval);
+          setGameOver(true);
+        }
+      }, 1000);
+      return () => {
+        clearInterval(myInterval);
+      };
+    }
+  });
+
+  useEffect(() => {
+    console.log(seconds);
+    //socket.emit('updateGameState', { turnTimer: turnTimer - 1 });
+    if (turn === 'Player 1') {
+      //setPlayer1Timer(player1Timer - 1);
+      socket.emit('updateGameState', { player1Timer: player1Timer - 1, turnTimer: turnTimer - 1 });
+      //setTurnTimer(turnTimer - 1);
+    }
+    
+    if (turn === 'Player 2') {
+      //setPlayer2Timer(player2Timer - 1);
+      socket.emit('updateGameState', { player2Timer: player2Timer - 1, turnTimer: turnTimer - 1 });
+      //setTurnTimer(turnTimer - 1);
+    }
+
+    if (turnTimer === 1) {
+      const newPlayerTurn = turn === 'Player 1' ? 'Player 2' : 'Player 1';
+      socket.emit('updateGameState', { turn: newPlayerTurn });
+      console.log('switch turn after turnTimer === 0', newPlayerTurn);
+    }
+  }, [seconds]);
+
+  useEffect(() => {
+    if (gameStarted && turn === 'Player 1') {
+      if (player1Timer - 5 < 1) {
+        //setTurnTimer(player1Timer);
+        socket.emit('updateGameState', { turnTimer: player1Timer });
+      } else {
+        socket.emit('updateGameState', { turnTimer: 5 });
+        //setTurnTimer(5);
+      }
+    } 
+    if (gameStarted && turn === 'Player 2') {
+      if (player2Timer - 5 < 1) {
+        socket.emit('updateGameState', { turnTimer: player2Timer });
+        //setTurnTimer(player2Timer);
+      } else {
+        socket.emit('updateGameState', { turnTimer: 5 });
+        //setTurnTimer(5);
+      }
+    }
+  }, [turn])
 
   useEffect(() => {
     if (selectedCards.length === 0) return;
@@ -251,6 +325,9 @@ const Game = ({ room }) => {
   return (
     <Container>
       <h1>{currentUser?.name}</h1>
+      <h1>globale timer{seconds}</h1>
+      <h1>{gameStarted ? 'playerOne"' + player1Timer + ' - playerTwo:' + player2Timer : '' }</h1>
+      <h1>timer turn:{turnTimer}</h1>
       <h2>{room && currentUser?.name === turn ? 'Its your turn' : ''}</h2>
       <h2>{canFlipCard ? 'Down Deck': 'Up Deck'}</h2>
       <CardSectionContainer>{player2Cards}</CardSectionContainer>
