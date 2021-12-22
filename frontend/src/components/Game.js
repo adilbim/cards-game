@@ -75,11 +75,12 @@ const Game = ({ room }) => {
   const [gameOver, setGameOver] = useState(false);
 
   const [canFlipCard, setCanFlipCard] = useState(false);
-  const [seconds, setSeconds] = useState(59);
+  const [seconds, setSeconds] = useState(60);
   const [selectedShowCards, setSelectedShowCards] = useState([]);
-  const [player1Timer, setPlayer1Timer] = useState(29);
-  const [player2Timer, setPlayer2Timer] = useState(29);
+  const [player1Timer, setPlayer1Timer] = useState(30);
+  const [player2Timer, setPlayer2Timer] = useState(30);
   const [turnTimer, setTurnTimer] = useState(5);
+  const [winner, setWinner] = useState(null);
 
   const selectCard = (cardId) => {
     if (selectedCards.length >= 2) {
@@ -166,7 +167,7 @@ const Game = ({ room }) => {
   }, [room]);
 
   useEffect(() => {
-    socket.on('updateGameState', ({ turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points, selectedShowCards, player1Timer, player2Timer, turnTimer, seconds }) => {
+    socket.on('updateGameState', ({ turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points, selectedShowCards, player1Timer, player2Timer, turnTimer, seconds, winner }) => {
       //console.log('updateGameState', turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points);
       console.log('updateGameState');
       turn && setTurn(turn);
@@ -175,12 +176,14 @@ const Game = ({ room }) => {
       player2Deck && setPlayer2Deck(player2Deck);
       selectedCards && setSelectedCards(selectedCards);
       player1points && setPlayer1points(player1points);
-      player2points && setPlayer1points(player2points);
+      player2points && setPlayer2points(player2points);
       selectedShowCards && setSelectedShowCards(selectedShowCards);
       player1Timer && setPlayer1Timer(player1Timer);
       player2Timer && setPlayer2Timer(player2Timer);
       turnTimer && setTurnTimer(turnTimer);
       seconds && setSeconds(seconds);
+      gameOver && setGameOver(gameOver);
+      winner && setWinner(winner);
     });
   }, [room]);
 
@@ -202,7 +205,7 @@ const Game = ({ room }) => {
           //setSelectedCards([]);
           //shuffleCards();
           await delay(1000);
-          socket.emit('updateGameState', {selectedCards: [], player1Deck, player2Deck, selectedShowCards: [], player1points: player1points + 2});
+          socket.emit('updateGameState', {selectedCards: [], player1Deck: _.shuffle(cards), player2Deck: _.shuffle(cards), selectedShowCards: [], player1points: player1points + 2});
         } else {
           setCanFlipCard(!canFlipCard);
           //setPlayer2points(player2points + 2);
@@ -210,21 +213,21 @@ const Game = ({ room }) => {
           //setSelectedCards([]);
           //shuffleCards();
           await delay(1000);
-          socket.emit('updateGameState', {selectedCards: [], player1Deck, player2Deck, selectedShowCards: [], player2points: player2points + 2});
+          socket.emit('updateGameState', {selectedCards: [], player1Deck: _.shuffle(cards), player2Deck: _.shuffle(cards), selectedShowCards: [], player2points: player2points + 2});
         }
       } else {
         const newPlayerTurn = turn === 'Player 1' ? 'Player 2' : 'Player 1';
         console.log('not match new Player turn is', newPlayerTurn);
         if (turn === 'Player 1') {
           //setPlayer2Timer(5 - turnTimer);
-          socket.emit('updateGameState', { player2Timer: player2Timer + 5 - turnTimer });
+          socket.emit('updateGameState', { player2Timer: player2Timer + 5 - turnTimer, player1Timer: player1Timer - 5 - turnTimer });
         }
         if (turn === 'Player 2') {
           //setPlayer1Timer(5 - turnTimer);
-          socket.emit('updateGameState', { player1Timer: player1Timer + 5 - turnTimer });
+          socket.emit('updateGameState', { player1Timer: player1Timer + 5 - turnTimer, player2Timer: player2Timer - 5 - turnTimer });
         }
         await delay(1000);
-        socket.emit('updateGameState', {turn: newPlayerTurn, selectedCards: [], selectedShowCards: [], player1Deck, player2Deck });
+        socket.emit('updateGameState', {turn: newPlayerTurn, selectedCards: [], selectedShowCards: [], player1Deck: _.shuffle(cards), player2Deck: _.shuffle(cards) });
       }
       
       //a delay to make stuff not quick
@@ -237,6 +240,38 @@ const Game = ({ room }) => {
   }, [selectedCards])
 
   useEffect(() => {
+    if (gameOver && winner) {
+      //setCurrentUser({});
+      alert('The game is over the winer is ' + winner);
+    }
+  }, [gameOver, winner])
+
+  useEffect(() => {
+    //if (gameOver) return;
+
+    if (player1points === 10) {
+      socket.emit('updateGameState', {winner: 'Player 1', gameOver: true} );
+    }
+    if (player2points === 10) {
+      socket.emit('updateGameState', {winner: 'Player 2', gameOver: true} );
+    }
+    if (player1Timer <= 1) {
+      if (player1points > player2points) {
+        socket.emit('updateGameState', { winner: 'Player 1', gameOver: true } );
+      } else {
+        socket.emit('updateGameState', { winner: 'Player 2', gameOver: true } );
+      }
+    }
+    if (player2Timer <= 1) {
+      if (player2points > player1points) {
+        socket.emit('updateGameState', { winner: 'Player 2', gameOver: true } );
+      } else {
+        socket.emit('updateGameState', { winner: 'Player 1', gameOver: true } );
+      }
+    }
+  }, [player1points, player2points, player1Timer, player2Timer]);
+
+  useEffect(() => {
     //const delay = (ms) => new Promise((res) => setTimeout(res, ms));
     // await delay(3000);
     if (gameStarted) {
@@ -245,7 +280,7 @@ const Game = ({ room }) => {
           //setSeconds(seconds - 1);
           socket.emit('updateGameState', { seconds: seconds - 1 });
         }
-        if (seconds === 0) {
+        if (seconds === 1) {
           clearInterval(myInterval);
           setGameOver(true);
         }
@@ -312,7 +347,7 @@ const Game = ({ room }) => {
 
   useEffect(() => {
     if (gameStarted && currentUser?.name === turn) {
-      alert(`it's your turn ${currentUser.name}`);
+      //alert(`it's your turn ${currentUser.name}`);
     }
   }, [gameStarted]);
 
