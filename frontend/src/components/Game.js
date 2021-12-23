@@ -8,13 +8,22 @@ const ENDPOINT = "http://localhost:8080";
 
 const CardSectionContainer = styled.div`
   height: 300px;
-  width: 800px;
+  // width: 800px;
   display: flex;
   justify-content: space-around;
 `;
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+  .cards-table {
+    background-image: url(https://www.pngkey.com/png/full/929-9295997_88-colorfulness.png);
+    background-repeat: no-repeat;
+    background-position: center;
+    backgroud-size: cover;
+    min-width: 945px;
+    margin: 0 auto;
+    height: 464px;
+  }
 `;
 
 let socket;
@@ -374,14 +383,22 @@ const Game = ({ room }) => {
 
   return (
     <Container>
-      <h1>{currentUser?.name}</h1>
-      <h1>globale timer{seconds}</h1>
-      <h1>{gameStarted ? 'playerOne"' + player1Timer + ' - playerTwo:' + player2Timer : '' }</h1>
-      <h1>timer turn:{turnTimer}</h1>
-      <h2>{room && currentUser?.name === turn ? 'Its your turn' : ''}</h2>
-      <h2>{canFlipCard ? 'Down Deck': 'Up Deck'}</h2>
-      <CardSectionContainer>{player2Cards}</CardSectionContainer>
-      <CardSectionContainer>{player1Cards}</CardSectionContainer>
+      <div className="card text-white bg-primary mb-3" >
+        <div className="card-header">Room: {room}</div>
+        <div className="card-body">
+          <h5 className="card-title">{currentUser?.name}</h5>
+          <h5 className="card-title">Time: {gameStarted && (currentUser?.name === 'Player 1' ? player1Timer : player2Timer) || 0}</h5>
+          <h5 className="card-title">Turn Time: {gameStarted && turnTimer || 0}</h5>
+          {users.length === 2 ? <div className={room && currentUser?.name === turn ? 'text-success spinner-grow' : 'text-danger spinner-grow' } role="status">
+            <span className="sr-only">Loading...</span>
+          </div> : ''}
+        </div>
+      </div>
+      {/* <h2>{canFlipCard ? 'Down Deck': 'Up Deck'}</h2> */}
+      <div className="cards-table">
+        <CardSectionContainer>{player2Cards}</CardSectionContainer>
+        <CardSectionContainer>{player1Cards}</CardSectionContainer>
+      </div>
       <Chat messages={messages} sendMessage={sendMessage} />
     </Container>
   );

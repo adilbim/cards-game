@@ -8,7 +8,6 @@ const CardContainer = styled.div`
 
   .card {
     margin-top: 1rem;
-    height: 20vh;
     width: 100%;
     position: relative;
   }
@@ -47,6 +46,7 @@ const CardContainer = styled.div`
   .imgContainer {
     width: 100%;
     height: 100%;
+    margin: 5px 0;
   }
 `;
 
