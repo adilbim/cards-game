@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { io } from "socket.io-client";
 import _ from "lodash";
 import Card from "./Card";
+import Chat from './Chat';
 const ENDPOINT = "http://localhost:8080";
 
 const CardSectionContainer = styled.div`
@@ -73,6 +74,7 @@ const Game = ({ room }) => {
   const [player1points, setPlayer1points] = useState(0);
   const [player2points, setPlayer2points] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [messages, setMessages] = useState([]);
 
   const [canFlipCard, setCanFlipCard] = useState(false);
   const [seconds, setSeconds] = useState(60);
@@ -97,6 +99,13 @@ const Game = ({ room }) => {
     setPlayer2Deck(_.shuffle(cards));
     //setInitiateFlip(true);
     //setInitiateFlip(false);
+  }
+
+  const sendMessage = (message, callback) => {
+    socket.emit('sendMessage', { message: message }, () => {
+      callback('');
+      console.log('Send message');
+    });
   }
 
   const player1Cards = player1Deck.map((card, i) => {
@@ -163,6 +172,12 @@ const Game = ({ room }) => {
       console.log("currentUserData", data, turn === data.name);
       setCurrentUser(data);
       setCanFlipCard('Player 1' === data.name);
+    });
+    socket.on('message', message => {
+      setMessages(messages => [ ...messages, message ]);
+
+      const chatBody = document.querySelector('.chat-body');
+      chatBody.scrollTop = chatBody.scrollHeight;
     });
   }, [room]);
 
@@ -367,6 +382,7 @@ const Game = ({ room }) => {
       <h2>{canFlipCard ? 'Down Deck': 'Up Deck'}</h2>
       <CardSectionContainer>{player2Cards}</CardSectionContainer>
       <CardSectionContainer>{player1Cards}</CardSectionContainer>
+      <Chat messages={messages} sendMessage={sendMessage} />
     </Container>
   );
 };
