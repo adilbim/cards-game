@@ -387,6 +387,7 @@ const Game = ({ room }) => {
         <div className="card-header">Room: {room}</div>
         <div className="card-body">
           <h5 className="card-title">{currentUser?.name}</h5>
+          <h5 className="card-title">Points: {gameStarted && (currentUser?.name === 'Player 1' ? player1points : player2points) || 0}</h5>
           <h5 className="card-title">Time: {gameStarted && (currentUser?.name === 'Player 1' ? player1Timer : player2Timer) || 0}</h5>
           <h5 className="card-title">Turn Time: {gameStarted && turnTimer || 0}</h5>
           {users.length === 2 ? <div className={room && currentUser?.name === turn ? 'text-success spinner-grow' : 'text-danger spinner-grow' } role="status">
