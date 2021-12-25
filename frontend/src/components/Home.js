@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import _ from 'lodash';
 //import { Link } from "react-router-dom";
 
 const Home = ({ setRoomCode }) => {
@@ -8,6 +9,10 @@ const Home = ({ setRoomCode }) => {
   };
   const handleSubmit = () => {
     setRoomCode(roomId);
+  };
+  const createRoom = () => {
+    const randomId = `${_.random(1000, 9999)}`;
+    setRoomCode(randomId);
   };
 
   return (
@@ -24,7 +29,7 @@ const Home = ({ setRoomCode }) => {
         <h1>OR</h1>
         <div className="homepage-create">
           {/* <Link to={`/play?roomCode=${randomCodeGenerator(5)}`}> */}
-          <button disabled className="game-button orange">
+          <button onClick={createRoom} className="game-button orange">
             CREATE GAME
           </button>
           {/* </Link> */}
