@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import _ from 'lodash';
-//import { Link } from "react-router-dom";
 
 const Home = ({ setRoomCode, room }) => {
   const [roomId, setRoomId] = useState("");
