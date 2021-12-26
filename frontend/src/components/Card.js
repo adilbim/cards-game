@@ -6,7 +6,7 @@ const CardContainer = styled.div`
 
   width: 100px;
 
-  .card {
+  .cardBackground {
     margin-top: 1rem;
     width: 100%;
     position: relative;
@@ -23,7 +23,7 @@ const CardContainer = styled.div`
 
     position: absolute;
     backface-visibility: hidden;
-    transition: transform 0.5s ease;
+    transition: transform 0.4s ease;
   }
 
   .cardBack {
@@ -63,7 +63,7 @@ const Card = ({ cardImg, id, selectCard, canFlip, disabled, isFliped }) => {
 
   return (
     <CardContainer>
-      <div className="card" onClick={handleClick}>
+      <div className="cardBackground" onClick={handleClick}>
         <div id="back" className={!isFliped ? "cardBack flipped" : "cardBack"}>
           <img alt="" src={cardBack} className="imgContainer " />
         </div>

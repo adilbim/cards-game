@@ -171,6 +171,13 @@ const Game = ({ room }) => {
       setTurn('Player 1');
       setPlayer1Deck(player1Deck);
       setPlayer2Deck(player2Deck);
+      // setGameOver(false);
+      // setPlayer1points(0);
+      // setPlayer2points(0);
+      // setPlayer1Timer(30);
+      // setPlayer2Timer(30);
+      // setWinner(null);
+      // setSeconds(60);
     });
 
     socket.on("roomData", function (data) {
@@ -206,10 +213,29 @@ const Game = ({ room }) => {
       player2Timer && setPlayer2Timer(player2Timer);
       turnTimer && setTurnTimer(turnTimer);
       seconds && setSeconds(seconds);
-      gameOver && setGameOver(gameOver);
       winner && setWinner(winner);
     });
   }, [room]);
+
+  useEffect(() => {
+    if(winner){
+      socket.emit('updateGameState', {
+        turn:"player 1",
+        gameOver: false,
+        player1Deck,
+        player2Deck,
+        selectedCards: [],
+        player1points: 0,
+        player2points: 0,
+        selectedShowCards: [],
+        player1Timer: 30,
+        player2Timer: 30,
+        turnTimer: 5,
+        seconds: 1,
+        winner: null,
+      });
+    }
+},[winner])
 
   useEffect(async () => {
     const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -244,11 +270,11 @@ const Game = ({ room }) => {
         console.log('not match new Player turn is', newPlayerTurn);
         if (turn === 'Player 1') {
           //setPlayer2Timer(5 - turnTimer);
-          socket.emit('updateGameState', { player2Timer: player2Timer + 5 - turnTimer, player1Timer: player1Timer - 5 - turnTimer });
+          socket.emit('updateGameState', { player2Timer: player2Timer + 5 - turnTimer, player1Timer: player1Timer - turnTimer });
         }
         if (turn === 'Player 2') {
           //setPlayer1Timer(5 - turnTimer);
-          socket.emit('updateGameState', { player1Timer: player1Timer + 5 - turnTimer, player2Timer: player2Timer - 5 - turnTimer });
+          socket.emit('updateGameState', { player1Timer: player1Timer + 5 - turnTimer, player2Timer: player2Timer - turnTimer });
         }
         await delay(1000);
         socket.emit('updateGameState', {turn: newPlayerTurn, selectedCards: [], selectedShowCards: [], player1Deck: _.shuffle(cards), player2Deck: _.shuffle(cards) });
@@ -359,6 +385,12 @@ const Game = ({ room }) => {
   }, [turn])
 
   useEffect(() => {
+    if(selectedCards.length === 1) {
+      socket.emit('updateGameState', { selectedCards:[],selectedShowCards:[], player1Deck: _.shuffle(cards), player2Deck: _.shuffle(cards) });
+    }
+  }, [turn]);
+
+  useEffect(() => {
     if (selectedCards.length === 0) return;
     socket.emit('updateGameState', { selectedShowCards });
   }, [selectedCards]);
@@ -381,7 +413,7 @@ const Game = ({ room }) => {
     }
   }, [turn, currentUser]);
 
-  return (
+  return (users.length === 2 && gameStarted & !gameOver ?
     <Container>
       <div className="card text-white bg-primary mb-3" >
         <div className="card-header">Room: {room}</div>
@@ -395,14 +427,26 @@ const Game = ({ room }) => {
           </div> : ''}
         </div>
       </div>
-      {/* <h2>{canFlipCard ? 'Down Deck': 'Up Deck'}</h2> */}
       <div className="cards-table">
         <CardSectionContainer>{player2Cards}</CardSectionContainer>
         <CardSectionContainer>{player1Cards}</CardSectionContainer>
       </div>
       <Chat messages={messages} sendMessage={sendMessage} />
     </Container>
-  );
+  : <>
+    <div>
+      <h1>{room && users.length === 1 && !winner ? `Room: ${room} Waiting for the second player to join the game...` : ''}</h1>
+      <div>
+        <h1>{winner ? `The winner is ${winner}` : ''}</h1>
+        <div>
+          { winner ?
+            <button onClick={() =>  window.location.reload(false)}>New Game</button>
+            : ''
+          }
+        </div>
+      </div>
+    </div>
+  </>);
 };
 
 export default Game;

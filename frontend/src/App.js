@@ -13,7 +13,7 @@ export default function App() {
   return (
     <div className="App">
       <CardSection room={roomCode} />
-      <Home setRoomCode={setRoomCode} />
+      <Home room={roomCode} setRoomCode={setRoomCode} />
     </div>
   );
 }
