@@ -3,8 +3,7 @@ import styled from "styled-components";
 import { io } from "socket.io-client";
 import _ from "lodash";
 import Card from "./Card";
-import Chat from './Chat';
-const ENDPOINT = "http://localhost:8080";
+import Chat from "./Chat";
 
 const CardSectionContainer = styled.div`
   height: 300px;
@@ -25,39 +24,34 @@ const Container = styled.div`
   }
 `;
 
+const ENDPOINT = "http://localhost:8080";
 let socket;
 const cards = [
   {
-    img:
-      "https://previews.123rf.com/images/pandawild/pandawild1509/pandawild150900125/45128572-poker-carte-%C3%A0-jouer-10-de-diamant.jpg",
-    id: "10-heart"
+    img: "https://previews.123rf.com/images/pandawild/pandawild1509/pandawild150900125/45128572-poker-carte-%C3%A0-jouer-10-de-diamant.jpg",
+    id: "10-heart",
   },
   {
-    img:
-      "https://upload.wikimedia.org/wikipedia/commons/c/ce/Poker-sm-224-Jh.png",
-    id: "valets-heart"
+    img: "https://upload.wikimedia.org/wikipedia/commons/c/ce/Poker-sm-224-Jh.png",
+    id: "valets-heart",
   },
   {
-    img:
-      "https://st.depositphotos.com/2127699/2238/i/950/depositphotos_22389279-stock-photo-playing-card-queen-of-hearts.jpg",
-    id: "reine-heart"
+    img: "https://st.depositphotos.com/2127699/2238/i/950/depositphotos_22389279-stock-photo-playing-card-queen-of-hearts.jpg",
+    id: "reine-heart",
   },
   {
-    img:
-      "https://images.freeimages.com/images/premium/previews/1783/17837166-playing-card-king-of-hearts.jpg",
-    id: "roi-heart"
+    img: "https://images.freeimages.com/images/premium/previews/1783/17837166-playing-card-king-of-hearts.jpg",
+    id: "roi-heart",
   },
   {
-    img:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Ace_of_hearts.svg/1200px-Ace_of_hearts.svg.png",
-    id: "as-heart"
-  }
+    img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Ace_of_hearts.svg/1200px-Ace_of_hearts.svg.png",
+    id: "as-heart",
+  },
 ];
 
 const Game = ({ room }) => {
-
   const [roomFull, setRoomFull] = useState(false);
-  const [users, setUsers] = useState([])
+  const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
   //Game states
@@ -88,18 +82,38 @@ const Game = ({ room }) => {
   };
 
   const sendMessage = (message, callback) => {
-    socket.emit('sendMessage', { message: message }, () => {
-      callback('');
-      console.log('Send message');
+    socket.emit("sendMessage", { message: message }, () => {
+      callback("");
+      console.log("Send message");
     });
-  }
+  };
 
   const player1Cards = player1Deck.map((card, i) => {
-    return <Card disabled={turn !== currentUser?.name} canFlip={canFlipCard} selectCard={selectCard} isFliped={selectedShowCards[0] === card.id} key={i} cardImg={card.img} id={card.id} />;
+    return (
+      <Card
+        disabled={turn !== currentUser?.name}
+        canFlip={canFlipCard}
+        selectCard={selectCard}
+        isFliped={selectedShowCards[0] === card.id}
+        key={i}
+        cardImg={card.img}
+        id={card.id}
+      />
+    );
   });
 
   const player2Cards = player2Deck.map((card, i) => {
-    return <Card disabled={turn !== currentUser?.name} canFlip={!canFlipCard} selectCard={selectCard} isFliped={selectedShowCards[1] === card.id} key={i} cardImg={card.img} id={card.id} />;
+    return (
+      <Card
+        disabled={turn !== currentUser?.name}
+        canFlip={!canFlipCard}
+        selectCard={selectCard}
+        isFliped={selectedShowCards[1] === card.id}
+        key={i}
+        cardImg={card.img}
+        id={card.id}
+      />
+    );
   });
 
   useEffect(() => {
@@ -107,7 +121,7 @@ const Game = ({ room }) => {
       forceNew: true,
       reconnectionAttempts: "Infinity",
       timeout: 10000,
-      transports: ["websocket"]
+      transports: ["websocket"],
     };
     socket = io.connect(ENDPOINT, connectionOptions);
 
@@ -117,28 +131,28 @@ const Game = ({ room }) => {
       });
       socket.emit("initGameState", {
         player1Deck,
-        player2Deck
+        player2Deck,
       });
     }
   }, [room]);
 
   useEffect(() => {
-    if (roomFull) alert('The room is Full');
+    if (roomFull) alert("The room is Full");
   }, [roomFull]);
 
   useEffect(() => {
     return function cleanup() {
-        socket.emit("disconnect");
-        //shut down connnection instance
-        socket.off();
-      };
+      socket.emit("disconnect");
+      //shut down connnection instance
+      socket.off();
+    };
   }, []);
 
   useEffect(() => {
     socket.on("initGameState", (data) => {
-      console.log('game state', data);
+      console.log("game state", data);
       const { player1Deck, player2Deck } = data;
-      setTurn('Player 1');
+      setTurn("Player 1");
       setPlayer1Deck(player1Deck);
       setPlayer2Deck(player2Deck);
     });
@@ -149,39 +163,56 @@ const Game = ({ room }) => {
     socket.on("currentUserData", function (data) {
       console.log("currentUserData", data, turn === data.name);
       setCurrentUser(data);
-      setCanFlipCard('Player 1' === data.name);
+      setCanFlipCard("Player 1" === data.name);
     });
-    socket.on('message', message => {
-      setMessages(messages => [ ...messages, message ]);
+    socket.on("message", (message) => {
+      setMessages((messages) => [...messages, message]);
 
-      const chatBody = document.querySelector('.chat-body');
+      const chatBody = document.querySelector(".chat-body");
       chatBody.scrollTop = chatBody.scrollHeight;
     });
   }, [room]);
 
   useEffect(() => {
-    socket.on('updateGameState', ({ turn, gameOver, player1Deck, player2Deck, selectedCards, player1points, player2points, selectedShowCards, player1Timer, player2Timer, turnTimer, seconds, winner }) => {
-      console.log('updateGameState');
-      turn && setTurn(turn);
-      gameOver && setGameOver(gameOver);
-      player1Deck && setPlayer1Deck(player1Deck);
-      player2Deck && setPlayer2Deck(player2Deck);
-      selectedCards && setSelectedCards(selectedCards);
-      player1points && setPlayer1points(player1points);
-      player2points && setPlayer2points(player2points);
-      selectedShowCards && setSelectedShowCards(selectedShowCards);
-      player1Timer && setPlayer1Timer(player1Timer);
-      player2Timer && setPlayer2Timer(player2Timer);
-      turnTimer && setTurnTimer(turnTimer);
-      seconds && setSeconds(seconds);
-      winner && setWinner(winner);
-    });
+    socket.on(
+      "updateGameState",
+      ({
+        turn,
+        gameOver,
+        player1Deck,
+        player2Deck,
+        selectedCards,
+        player1points,
+        player2points,
+        selectedShowCards,
+        player1Timer,
+        player2Timer,
+        turnTimer,
+        seconds,
+        winner,
+      }) => {
+        console.log("updateGameState");
+        turn && setTurn(turn);
+        gameOver && setGameOver(gameOver);
+        player1Deck && setPlayer1Deck(player1Deck);
+        player2Deck && setPlayer2Deck(player2Deck);
+        selectedCards && setSelectedCards(selectedCards);
+        player1points && setPlayer1points(player1points);
+        player2points && setPlayer2points(player2points);
+        selectedShowCards && setSelectedShowCards(selectedShowCards);
+        player1Timer && setPlayer1Timer(player1Timer);
+        player2Timer && setPlayer2Timer(player2Timer);
+        turnTimer && setTurnTimer(turnTimer);
+        seconds && setSeconds(seconds);
+        winner && setWinner(winner);
+      }
+    );
   }, [room]);
 
   useEffect(() => {
-    if(winner){
-      socket.emit('updateGameState', {
-        turn:"player 1",
+    if (winner) {
+      socket.emit("updateGameState", {
+        turn: "player 1",
         gameOver: false,
         player1Deck,
         player2Deck,
@@ -196,69 +227,93 @@ const Game = ({ room }) => {
         winner: null,
       });
     }
-},[winner])
+  }, [winner]);
 
   useEffect(async () => {
     const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
     if (selectedCards.length === 0) {
-      return
+      return;
     } else if (selectedCards.length === 1) {
-      setCanFlipCard(!canFlipCard);console.log('selcted card1', turn);
-
+      setCanFlipCard(!canFlipCard);
+      console.log("selcted card1", turn);
     } else if (selectedCards.length === 2) {
       //point logic calulations
-      if (selectedCards[0] === selectedCards[1]) {console.log('match!');
-        if (turn === 'Player 1') {
+      if (selectedCards[0] === selectedCards[1]) {
+        console.log("match!");
+        if (turn === "Player 1") {
           setCanFlipCard(!canFlipCard);
           await delay(1000);
-          socket.emit('updateGameState', {selectedCards: [], player1Deck: _.shuffle(cards), player2Deck: _.shuffle(cards), selectedShowCards: [], player1points: player1points + 2});
+          socket.emit("updateGameState", {
+            selectedCards: [],
+            player1Deck: _.shuffle(cards),
+            player2Deck: _.shuffle(cards),
+            selectedShowCards: [],
+            player1points: player1points + 2,
+          });
         } else {
           setCanFlipCard(!canFlipCard);
           await delay(1000);
-          socket.emit('updateGameState', {selectedCards: [], player1Deck: _.shuffle(cards), player2Deck: _.shuffle(cards), selectedShowCards: [], player2points: player2points + 2});
+          socket.emit("updateGameState", {
+            selectedCards: [],
+            player1Deck: _.shuffle(cards),
+            player2Deck: _.shuffle(cards),
+            selectedShowCards: [],
+            player2points: player2points + 2,
+          });
         }
       } else {
-        const newPlayerTurn = turn === 'Player 1' ? 'Player 2' : 'Player 1';
-        console.log('not match new Player turn is', newPlayerTurn);
-        if (turn === 'Player 1') {
-          socket.emit('updateGameState', { player2Timer: player2Timer + 5 - turnTimer, player1Timer: player1Timer - turnTimer });
+        const newPlayerTurn = turn === "Player 1" ? "Player 2" : "Player 1";
+        console.log("not match new Player turn is", newPlayerTurn);
+        if (turn === "Player 1") {
+          socket.emit("updateGameState", {
+            player2Timer: player2Timer + 5 - turnTimer,
+            player1Timer: player1Timer - turnTimer,
+          });
         }
-        if (turn === 'Player 2') {
-          socket.emit('updateGameState', { player1Timer: player1Timer + 5 - turnTimer, player2Timer: player2Timer - turnTimer });
+        if (turn === "Player 2") {
+          socket.emit("updateGameState", {
+            player1Timer: player1Timer + 5 - turnTimer,
+            player2Timer: player2Timer - turnTimer,
+          });
         }
         await delay(1000);
-        socket.emit('updateGameState', {turn: newPlayerTurn, selectedCards: [], selectedShowCards: [], player1Deck: _.shuffle(cards), player2Deck: _.shuffle(cards) });
+        socket.emit("updateGameState", {
+          turn: newPlayerTurn,
+          selectedCards: [],
+          selectedShowCards: [],
+          player1Deck: _.shuffle(cards),
+          player2Deck: _.shuffle(cards),
+        });
       }
     }
-
-  }, [selectedCards])
+  }, [selectedCards]);
 
   useEffect(() => {
     if (gameOver && winner) {
-      alert('The game is over the winer is ' + winner);
+      alert("The game is over the winer is " + winner);
     }
-  }, [gameOver, winner])
+  }, [gameOver, winner]);
 
   useEffect(() => {
     if (player1points === 10) {
-      socket.emit('updateGameState', {winner: 'Player 1', gameOver: true} );
+      socket.emit("updateGameState", { winner: "Player 1", gameOver: true });
     }
     if (player2points === 10) {
-      socket.emit('updateGameState', {winner: 'Player 2', gameOver: true} );
+      socket.emit("updateGameState", { winner: "Player 2", gameOver: true });
     }
     if (player1Timer <= 1) {
       if (player1points > player2points) {
-        socket.emit('updateGameState', { winner: 'Player 1', gameOver: true } );
+        socket.emit("updateGameState", { winner: "Player 1", gameOver: true });
       } else {
-        socket.emit('updateGameState', { winner: 'Player 2', gameOver: true } );
+        socket.emit("updateGameState", { winner: "Player 2", gameOver: true });
       }
     }
     if (player2Timer <= 1) {
       if (player2points > player1points) {
-        socket.emit('updateGameState', { winner: 'Player 2', gameOver: true } );
+        socket.emit("updateGameState", { winner: "Player 2", gameOver: true });
       } else {
-        socket.emit('updateGameState', { winner: 'Player 1', gameOver: true } );
+        socket.emit("updateGameState", { winner: "Player 1", gameOver: true });
       }
     }
   }, [player1points, player2points, player1Timer, player2Timer]);
@@ -267,7 +322,7 @@ const Game = ({ room }) => {
     if (gameStarted) {
       const myInterval = setInterval(() => {
         if (seconds > 0) {
-          socket.emit('updateGameState', { seconds: seconds - 1 });
+          socket.emit("updateGameState", { seconds: seconds - 1 });
         }
         if (seconds === 1) {
           clearInterval(myInterval);
@@ -282,47 +337,58 @@ const Game = ({ room }) => {
 
   useEffect(() => {
     console.log(seconds);
-    if (turn === 'Player 1') {
-      socket.emit('updateGameState', { player1Timer: player1Timer - 1, turnTimer: turnTimer - 1 });
+    if (turn === "Player 1") {
+      socket.emit("updateGameState", {
+        player1Timer: player1Timer - 1,
+        turnTimer: turnTimer - 1,
+      });
     }
-    
-    if (turn === 'Player 2') {
-      socket.emit('updateGameState', { player2Timer: player2Timer - 1, turnTimer: turnTimer - 1 });
+
+    if (turn === "Player 2") {
+      socket.emit("updateGameState", {
+        player2Timer: player2Timer - 1,
+        turnTimer: turnTimer - 1,
+      });
     }
 
     if (turnTimer === 1) {
-      const newPlayerTurn = turn === 'Player 1' ? 'Player 2' : 'Player 1';
-      socket.emit('updateGameState', { turn: newPlayerTurn });
-      console.log('switch turn after turnTimer === 0', newPlayerTurn);
+      const newPlayerTurn = turn === "Player 1" ? "Player 2" : "Player 1";
+      socket.emit("updateGameState", { turn: newPlayerTurn });
+      console.log("switch turn after turnTimer === 0", newPlayerTurn);
     }
   }, [seconds]);
 
   useEffect(() => {
-    if (gameStarted && turn === 'Player 1') {
+    if (gameStarted && turn === "Player 1") {
       if (player1Timer - 5 < 1) {
-        socket.emit('updateGameState', { turnTimer: player1Timer });
+        socket.emit("updateGameState", { turnTimer: player1Timer });
       } else {
-        socket.emit('updateGameState', { turnTimer: 5 });
-      }
-    } 
-    if (gameStarted && turn === 'Player 2') {
-      if (player2Timer - 5 < 1) {
-        socket.emit('updateGameState', { turnTimer: player2Timer });
-      } else {
-        socket.emit('updateGameState', { turnTimer: 5 });
+        socket.emit("updateGameState", { turnTimer: 5 });
       }
     }
-  }, [turn])
+    if (gameStarted && turn === "Player 2") {
+      if (player2Timer - 5 < 1) {
+        socket.emit("updateGameState", { turnTimer: player2Timer });
+      } else {
+        socket.emit("updateGameState", { turnTimer: 5 });
+      }
+    }
+  }, [turn]);
 
   useEffect(() => {
-    if(selectedCards.length === 1) {
-      socket.emit('updateGameState', { selectedCards:[],selectedShowCards:[], player1Deck: _.shuffle(cards), player2Deck: _.shuffle(cards) });
+    if (selectedCards.length === 1) {
+      socket.emit("updateGameState", {
+        selectedCards: [],
+        selectedShowCards: [],
+        player1Deck: _.shuffle(cards),
+        player2Deck: _.shuffle(cards),
+      });
     }
   }, [turn]);
 
   useEffect(() => {
     if (selectedCards.length === 0) return;
-    socket.emit('updateGameState', { selectedShowCards });
+    socket.emit("updateGameState", { selectedShowCards });
   }, [selectedCards]);
 
   useEffect(() => {
@@ -337,18 +403,45 @@ const Game = ({ room }) => {
     }
   }, [turn, currentUser]);
 
-  return (users.length === 2 && gameStarted & !gameOver ?
+  return users.length === 2 && gameStarted & !gameOver ? (
     <Container>
-      <div className="card text-white bg-primary mb-3" >
+      <div className="card text-white bg-primary mb-3">
         <div className="card-header">Room: {room}</div>
         <div className="card-body">
           <h5 className="card-title">{currentUser?.name}</h5>
-          <h5 className="card-title">Points: {gameStarted && (currentUser?.name === 'Player 1' ? player1points : player2points) || 0}</h5>
-          <h5 className="card-title">Time: {gameStarted && (currentUser?.name === 'Player 1' ? player1Timer : player2Timer) || 0}</h5>
-          <h5 className="card-title">Turn Time: {gameStarted && turnTimer || 0}</h5>
-          {users.length === 2 ? <div className={room && currentUser?.name === turn ? 'text-success spinner-grow' : 'text-danger spinner-grow' } role="status">
-            <span className="sr-only">Loading...</span>
-          </div> : ''}
+          <h5 className="card-title">
+            Points:{" "}
+            {(gameStarted &&
+              (currentUser?.name === "Player 1"
+                ? player1points
+                : player2points)) ||
+              0}
+          </h5>
+          <h5 className="card-title">
+            Time:{" "}
+            {(gameStarted &&
+              (currentUser?.name === "Player 1"
+                ? player1Timer
+                : player2Timer)) ||
+              0}
+          </h5>
+          <h5 className="card-title">
+            Turn Time: {(gameStarted && turnTimer) || 0}
+          </h5>
+          {users.length === 2 ? (
+            <div
+              className={
+                room && currentUser?.name === turn
+                  ? "text-success spinner-grow"
+                  : "text-danger spinner-grow"
+              }
+              role="status"
+            >
+              <span className="sr-only">Loading...</span>
+            </div>
+          ) : (
+            ""
+          )}
         </div>
       </div>
       <div className="cards-table">
@@ -357,20 +450,29 @@ const Game = ({ room }) => {
       </div>
       <Chat messages={messages} sendMessage={sendMessage} />
     </Container>
-  : <>
-    <div>
-      <h1>{room && users.length === 1 && !winner ? `Room: ${room} Waiting for the second player to join the game...` : ''}</h1>
+  ) : (
+    <>
       <div>
-        <h1>{winner ? `The winner is ${winner}` : ''}</h1>
+        <h1>
+          {room && users.length === 1 && !winner
+            ? `Room: ${room} Waiting for the second player to join the game...`
+            : ""}
+        </h1>
         <div>
-          { winner ?
-            <button onClick={() =>  window.location.reload(false)}>New Game</button>
-            : ''
-          }
+          <h1>{winner ? `The winner is ${winner}` : ""}</h1>
+          <div>
+            {winner ? (
+              <button onClick={() => window.location.reload(false)}>
+                New Game
+              </button>
+            ) : (
+              ""
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  </>);
+    </>
+  );
 };
 
 export default Game;

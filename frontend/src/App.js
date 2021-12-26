@@ -1,4 +1,3 @@
-//import "./styles.css";
 import CardSection from "./components/Game";
 import React, { useState, useEffect } from "react";
 import Home from "./components/Home";
